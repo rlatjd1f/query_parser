@@ -67,7 +67,9 @@ def main():
     with open("parsing.sql", "r", encoding="UTF-8") as file:
         try:
             for line in file:
-                line = line.strip().replace("  ", " ")
+                while "  " in line:
+                    line = line.strip().replace("  ", " ")
+
                 ori_query_list.append(line.strip())
                 print(line)
         except Exception as e:
