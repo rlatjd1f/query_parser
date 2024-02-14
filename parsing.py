@@ -12,8 +12,8 @@ def init():
     col_dict['TENANT'] = ["A", "COALESCE(TT{}.TENANT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_TENANTMASTER TT{} ON TT{}.TENANT_ID = {}.{}"]
     col_dict['OSCOM'] = ["A", "COALESCE(OS{}.OSCOM_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_OSCOMPANY OS{} ON OS{}.OSCOM_ID = {}.{}"]
     col_dict['COMPANY'] = ["A", "COALESCE(CT{}.COMPANY_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_COMPANYMASTER CT{} ON CT{}.COMPANY_ID = {}.{}"]
-    col_dict['ROUTE'] = ["A", "COALESCE(CT{}.ROUTE_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IE_ROUTE RO{} ON RO{}.ROUTE_ID = {}.{}"]
-    col_dict['CTIQ'] = ["A", "COALESCE(EA{}.MENT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IE_ANNOUNCEBGM AB{} ON AB{}.IE_MENT_ID = {}.{}"]
+    col_dict['ROUTE'] = ["A", "COALESCE(RO{}.ROUTE_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IE_ROUTE RO{} ON RO{}.ROUTE_ID = {}.{}"]
+    col_dict['CTIQ'] = ["A", "COALESCE(CT{}.MENT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IE_ANNOUNCEBGM CT{} ON CT{}.IE_MENT_ID = {}.{}"]
     col_dict['SYSTEM'] = ["A", "COALESCE(SM{}.SYSTEM_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_SYSTEMMASTER SM{} ON SM{}.SYSTEM_ID = {}.{}"]
     col_dict['CDR_SYSTEM'] = ["A", "COALESCE(SM{}.SYSTEM_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_SYSTEMMASTER SM{} ON SM{}.SYSTEM_ID = {}.{}"]
     col_dict['PROCESS'] = ["A", "COALESCE(CP{}.PROCESS_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_SYSTEMPROCESS CP{} ON CP{}.SYSTEM_ID = {}.{}"]
@@ -38,6 +38,7 @@ def init():
     col_dict['AGENT'] = ["A", "COALESCE(AG{}.AGENT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IC_AGENTMASTER AG{} ON AG{}.AGENT_ID = {}.{}"]
     col_dict['QUEUE'] = ["A", "COALESCE(QM{}.CTIQ_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IC_CTIQ_MASTER QM{} ON QM{}.CTIQ_ID = {}.{}"]
     col_dict['ACS'] = ["A", "COALESCE(ACS{}.ACS_SERVICE_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IR_ACS_SERVICE_MASTER ACS{} ON ACS{}.ACS_ID = {}.{}"]
+    col_dict['CAMPAIGN'] = ["A", "COALESCE(CM{}.CAMPAIGN_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IR_ACS_CAMPAIGN_MASTER CM{} ON CM{}.CAMPAIGN_ID = {}.{}"]
     col_dict['CAMPAIGN'] = ["A", "COALESCE(CM{}.CAMPAIGN_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IR_ACS_CAMPAIGN_MASTER CM{} ON CM{}.CAMPAIGN_ID = {}.{}"]
 
     # col_dict add from tb_common_code with file read
@@ -64,6 +65,7 @@ def main():
     with open("parsing.sql", "r", encoding="UTF-8") as file:
         try:
             for line in file:
+                line = line.replace("\n", "")
                 while "  " in line:
                     line = line.strip().replace("  ", " ")
 
@@ -195,6 +197,21 @@ def main():
 
                 new_query_list += ori_query_list[where_line:]
                 break
+
+    # join_col_dict = {}
+    # for idx, line in enumerate(new_query_list):
+    #     if "LEFT OUTER JOIN" in line:
+    #         last_value = line.split(" ")[len(line.split(" ")) - 1].strip()
+    #         join_col_dict[last_value] = idx
+    #
+    # for idx, line in enumerate(new_query_list):
+    #     for join_col in join_col_dict.keys():
+    #         if join_col in line:
+    #             col_name = line.split(",")[0]
+    #
+    #             if "." not in col_name:
+    #                 col_name = "{},".format(join_col)
+    #                 new_query_list[idx] = col_name
 
     for line in new_query_list:
         print(line)
