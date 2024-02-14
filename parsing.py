@@ -177,10 +177,13 @@ def main():
             if line_num < from_line:
                 continue
             elif line_num == from_line:
-                if len(line.split(" ")) < 3:
-                    new_query_list.append("{} {}".format(line, mst_table_alias))
-                else:
-                    new_query_list.append(line)
+                if len(line.split(",")) > 1:
+                    line = line.replace(",", " CROSS JOIN ")
+
+                while "  " in line:
+                    line = line.strip().replace("  ", " ")
+
+                new_query_list.append(line)
             else:
                 if line_num < where_line:
                     new_query_list += ori_query_list[from_line + 1:where_line]
