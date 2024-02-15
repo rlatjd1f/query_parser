@@ -198,25 +198,27 @@ def main():
                 new_query_list += ori_query_list[where_line:]
                 break
 
-    # join_col_dict = {}
-    # for idx, line in enumerate(new_query_list):
-    #     if "LEFT OUTER JOIN" in line:
-    #         last_value = line.split(" ")[len(line.split(" ")) - 1].strip()
-    #         join_col_dict[last_value] = idx
-    #
-    # for idx, line in enumerate(new_query_list):
-    #     for join_col in join_col_dict.keys():
-    #         if join_col in line:
-    #             col_name = line.split(",")[0]
-    #
-    #             if "." not in col_name:
-    #                 col_name = "{},".format(join_col)
-    #                 new_query_list[idx] = col_name
-
     for line in new_query_list:
         print(line)
     print(";")
 
+    ori_col_count = -1
+    new_col_count = -1
+    for line in ori_query_list:
+        if line.split(" ")[0] != "FROM":
+            ori_col_count += 1
+        else:
+            break
+
+    for line in new_query_list:
+        if line.split(" ")[0] != "FROM":
+            new_col_count += 1
+        else:
+            break
+
+    print("===============================")
+    print("ori_col_count: {}".format(ori_col_count))
+    print("new_col_count: {}".format(new_col_count))
 
 if __name__ == "__main__":
     main()
