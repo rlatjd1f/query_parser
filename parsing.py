@@ -6,7 +6,7 @@ col_dict = {}
 
 
 def init():
-    col_dict['GROUP'] = ["A", "COALESCE(GR{}.GROUP_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IC_GROUPMASTER GR{} ON GR{}.FIRST_GROUP_ID = {}.{}"]
+    col_dict['GROUP'] = ["A", "COALESCE(GR{}.GROUP_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_IC_GROUPMASTER GR{} ON GR{}.GROUP_ID = {}.{}"]
     col_dict['GRANT'] = ["A", "COALESCE(GM{}.GRANT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_GRANTMASTER GM{} ON GM{}.GRANT_ID = {}.{}"]
     col_dict['CENTER'] = ["A", "COALESCE(CM{}.GRANT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_CENTERMASTER CM{} ON CM{}.GRANT_ID = {}.{}"]
     col_dict['TENANT'] = ["A", "COALESCE(TT{}.TENANT_NAME,N'N/A') AS {}", "LEFT OUTER JOIN TB_CC_TENANTMASTER TT{} ON TT{}.TENANT_ID = {}.{}"]
