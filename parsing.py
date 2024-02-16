@@ -139,21 +139,48 @@ def change_function(query_list):
         line_list = line.split(" ")
 
         for idx1, word1 in enumerate(line_list):
+            pre_sql = " ".join(line_list[:idx1])
+            post_sql = " ".join(line_list[idx1 + 1:])
+
             if "TO_NUMBER" in word1.upper():
                 pattern = re.compile(r"TO_NUMBER\(\s*(.*?)\s*\)")
                 match = pattern.search(word1)
                 if match:
                     col_word = match.group(1)
-                    line_list[idx1] = "CAST({} AS INTEGER)".format(col_word)
+                    line_list[idx1] = "{} CAST({} AS INTEGER) {}".format(pre_sql, col_word, post_sql)
+                    query_list[idx] = line_list[idx1]
+                    break
 
-            if "BT_INT_TO_CHAR" in word1.upper():
+            elif "BT_INT_TO_CHAR" in word1.upper():
                 pattern = re.compile(r"BT_INT_TO_CHAR\(\s*(.*?)\s*\)")
                 match = pattern.search(word1)
                 if match:
                     col_word = match.group(1)
-                    line_list[idx1] = "CAST({} AS VARCHAR2(100))".format(col_word)
+                    line_list[idx1] = "{} CAST({} AS VARCHAR2(100)) {}".format(pre_sql, col_word, post_sql)
+                    query_list[idx] = line_list[idx1]
+                    break
 
-        query_list[idx] = " ".join(line_list)
+            elif "BT_NVL_CHAR" in word1.upper():
+                pattern = re.compile(r"BT_NVL_CHAR\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
+                match = pattern.search(word1)
+                if match:
+                    col_word = match.group(1)
+                    nvl_word = match.group(2)
+                    line_list[idx1] = "{} COALESCE({}, {}) {}".format(pre_sql, col_word, nvl_word, post_sql)
+                    query_list[idx] = line_list[idx1]
+                    break
+
+            elif "BT_NVL_INT" in word1.upper():
+                pattern = re.compile(r"BT_NVL_INT\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
+                match = pattern.search(word1)
+                if match:
+                    col_word = match.group(1)
+                    nvl_word = match.group(2)
+                    line_list[idx1] = "{} COALESCE({}, {}) {}".format(pre_sql, col_word, nvl_word, post_sql)
+                    query_list[idx] = line_list[idx1]
+                    break
+
+            # query_list[idx] = " ".join(line_list)
 
     return query_list
 
