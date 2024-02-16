@@ -86,12 +86,20 @@ def date_change_function(query_list):
             if "BT_DATE_FORMAT" in word1.upper():
                 pattern = re.compile(r"BT_DATE_FORMAT\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
                 date_insert_list = []
-                match = pattern.search(word1 + line_list[idx1 + 1])
+                end_pos = 0
+                search_str = []
+                for idx2, word2 in enumerate(line_list[idx1:]):
+                    search_str.append(word2)
+                    if ")" in word2:
+                        end_pos = idx2
+                        break
+
+                match = pattern.search(" ".join(search_str))
                 if match:
                     col_word = match.group(1)
                     date_fmt = match.group(2)
                     pre_sql = " ".join(line_list[:idx1])
-                    post_sql = " ".join(line_list[idx1 + 2:])
+                    post_sql = " ".join(line_list[end_pos + 1:])
 
                     ora_date_fmt = ""
                     mysql_date_fmt = ""
