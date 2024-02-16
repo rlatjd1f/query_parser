@@ -109,6 +109,9 @@ def date_change_function(query_list):
                     elif date_fmt.upper() == "YYYY-MM-DD":
                         ora_date_fmt = "YYYY-MM-DD"
                         mysql_date_fmt = "%Y-%m-%d"
+                    elif date_fmt.upper() == "YYYYMMDDHH24":
+                        ora_date_fmt = "YYYYMMDDHH24"
+                        mysql_date_fmt = "%Y%m%d%H"
                     elif date_fmt.upper() == "YYYYMMDDHH24MISS":
                         ora_date_fmt = "YYYYMMDDHH24MISS"
                         mysql_date_fmt = "%Y%m%d%H%i%s"
