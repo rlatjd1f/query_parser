@@ -52,15 +52,8 @@ def init():
             col_dict[col_keyword] = [val1, val2, val3]
 
 
-def main():
-    init()
-    col_list = col_dict.keys()
+def read_file():
     ori_query_list = []
-    new_query_list = []
-    new_cond_list = []
-    mst_table_alias = "A"
-    from_line = 0
-    where_line = 0
 
     with open("parsing.sql", "r", encoding="UTF-8") as file:
         try:
@@ -81,13 +74,108 @@ def main():
     print(";")
     print("")
 
+    return ori_query_list
+
+
+def date_change_function(query_list):
+    for idx, line in enumerate(query_list):
+        line_list = line.split(" ")
+
+        for idx1, word1 in enumerate(line_list):
+
+            if "BT_DATE_FORMAT" in word1.upper():
+                pattern = re.compile(r"BT_DATE_FORMAT\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
+                date_insert_list = []
+                match = pattern.search(word1 + line_list[idx1 + 1])
+                if match:
+                    col_word = match.group(1)
+                    date_fmt = match.group(2)
+                    pre_sql = " ".join(line_list[:idx1])
+                    post_sql = " ".join(line_list[idx1 + 2:])
+
+                    ora_date_fmt = ""
+                    mysql_date_fmt = ""
+                    if date_fmt.upper() == "YYYYMMDD":
+                        ora_date_fmt = "YYYYMMDD"
+                        mysql_date_fmt = "%Y%m%d"
+                    elif date_fmt.upper() == "YYYY-MM-DD":
+                        ora_date_fmt = "YYYY-MM-DD"
+                        mysql_date_fmt = "%Y-%m-%d"
+                    elif date_fmt.upper() == "YYYYMMDDHH24MISS":
+                        ora_date_fmt = "YYYYMMDDHH24MISS"
+                        mysql_date_fmt = "%Y%m%d%H%i%s"
+                    elif date_fmt.upper() == "YYYY-MM-DD HH24:MI:SS":
+                        ora_date_fmt = "YYYY-MM-DD HH24:MI:SS"
+                        mysql_date_fmt = "%Y-%m-%d %H:%i:%s"
+                    elif date_fmt.upper() == "HH24MI":
+                        ora_date_fmt = "HH24MI"
+                        mysql_date_fmt = "%H%i"
+
+                    date_insert_list.append("<isEqual property=\"sDbType\" compareValue=\"oracle\">")
+                    date_insert_list.append(" {} TO_CHAR({}, '{}') {}".format(pre_sql, col_word, ora_date_fmt, post_sql))
+                    date_insert_list.append("</isEqual>")
+                    date_insert_list.append("<isEqual property=\"sDbType\" compareValue=\"mariadb\">")
+                    date_insert_list.append(" {} DATE_FORMAT({}, '{}') {}".format(pre_sql, col_word, mysql_date_fmt, post_sql))
+                    date_insert_list.append("</isEqual>")
+                    query_list[idx:idx+1] = date_insert_list
+                    break
+
+    return query_list
+
+
+def change_function(query_list):
+    for idx, line in enumerate(query_list):
+        line_list = line.split(" ")
+
+        for idx1, word1 in enumerate(line_list):
+            if "TO_NUMBER" in word1.upper():
+                pattern = re.compile(r"TO_NUMBER\(\s*(.*?)\s*\)")
+                match = pattern.search(word1)
+                if match:
+                    col_word = match.group(1)
+                    line_list[idx1] = "CAST({} AS INTEGER)".format(col_word)
+
+            if "BT_INT_TO_CHAR" in word1.upper():
+                pattern = re.compile(r"BT_INT_TO_CHAR\(\s*(.*?)\s*\)")
+                match = pattern.search(word1)
+                if match:
+                    col_word = match.group(1)
+                    line_list[idx1] = "CAST({} AS VARCHAR2(100))".format(col_word)
+
+        query_list[idx] = " ".join(line_list)
+
+    return query_list
+
+
+def main():
+    init()
+    col_list = col_dict.keys()
+    ori_query_list = read_file()
+    new_query_list = []
+
+    new_cond_list = []
+    mst_table_alias = "A"
+    is_first_from = False
+    from_line = 0
+    where_line = 0
+
     for idx, line in enumerate(ori_query_list):
-        if line.split(" ")[0] == "FROM":
+        if line.split(" ")[0] != "SELECT" and idx == 0:
+            is_first_select = False
+            ori_query_list = change_function(ori_query_list)
+            ori_query_list = date_change_function(ori_query_list)
+            for t_line in ori_query_list:
+                print(t_line)
+            print(";")
+            return
+
+        if line.split(" ")[0] == "FROM" and not is_first_from:
             last_col_line = new_query_list[len(new_query_list) - 1]
             if last_col_line[len(last_col_line) - 1] == ",":
                 new_query_list[len(new_query_list) - 1] = last_col_line[:len(last_col_line) - 1]
 
             from_line = idx
+            is_first_from = True
             if len(line.split(" ")) == 3:
                 mst_table_alias = line.split(" ")[2].strip()
 
@@ -119,11 +207,10 @@ def main():
                 new_query_list.append(line)
             else:
                 new_query_list.append(line)
-                
+
     common_idx = 1
     # query by line
     for line_num, line in enumerate(ori_query_list):
-        dot_pos = line.find(",")
 
         if line[0] == ",":
             match_line = line[1:].strip()
@@ -198,6 +285,9 @@ def main():
                 new_query_list += ori_query_list[where_line:]
                 break
 
+    new_query_list = change_function(new_query_list)
+    new_query_list = date_change_function(new_query_list)
+
     for line in new_query_list:
         print(line)
     print(";")
@@ -219,6 +309,7 @@ def main():
     print("===============================")
     print("ori_col_count: {}".format(ori_col_count))
     print("new_col_count: {}".format(new_col_count))
+
 
 if __name__ == "__main__":
     main()
