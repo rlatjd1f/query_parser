@@ -160,27 +160,12 @@ def change_function(query_list):
                     query_list[idx] = line_list[idx1]
                     break
 
-            elif "BT_NVL_CHAR" in word1.upper():
-                pattern = re.compile(r"BT_NVL_CHAR\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
-                match = pattern.search(word1)
-                if match:
-                    col_word = match.group(1)
-                    nvl_word = match.group(2)
-                    line_list[idx1] = "{} COALESCE({}, {}) {}".format(pre_sql, col_word, nvl_word, post_sql)
-                    query_list[idx] = line_list[idx1]
-                    break
-
-            elif "BT_NVL_INT" in word1.upper():
-                pattern = re.compile(r"BT_NVL_INT\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
-                match = pattern.search(word1)
-                if match:
-                    col_word = match.group(1)
-                    nvl_word = match.group(2)
-                    line_list[idx1] = "{} COALESCE({}, {}) {}".format(pre_sql, col_word, nvl_word, post_sql)
-                    query_list[idx] = line_list[idx1]
-                    break
-
-            # query_list[idx] = " ".join(line_list)
+        if "BT_NVL_CHAR" in line.upper():
+            query_list[idx] = line.replace("BT_NVL_CHAR", "COALESCE")
+        elif "BT_NVL_INT" in line.upper():
+            query_list[idx] = line.replace("BT_NVL_INT", "COALESCE")
+        elif "BT_NVL_DATE" in line.upper():
+            query_list[idx] = line.replace("BT_NVL_DATE", "COALESCE")
 
     return query_list
 
@@ -228,7 +213,8 @@ def main():
 
             break
         elif line.split(" ")[0] == "SELECT":
-            new_query_list.append(line)
+            if from_line == 0:
+                new_query_list.append(line)
         elif idx != len(ori_query_list) - 1:
             if from_line != 0 and idx >= from_line:
                 continue
