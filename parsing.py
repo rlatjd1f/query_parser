@@ -91,7 +91,7 @@ def date_change_function(query_list):
                 for idx2, word2 in enumerate(line_list[idx1:]):
                     search_str.append(word2)
                     if ")" in word2:
-                        end_pos = idx2
+                        end_pos = idx2 + 1
                         break
 
                 match = pattern.search(" ".join(search_str))
