@@ -118,6 +118,9 @@ def date_change_function(query_list):
                     elif date_fmt.upper() == "YYYY-MM-DD HH24:MI:SS":
                         ora_date_fmt = "YYYY-MM-DD HH24:MI:SS"
                         mysql_date_fmt = "%Y-%m-%d %H:%i:%s"
+                    elif date_fmt.upper() == "YYYY-MM-DD HH24:MI":
+                        ora_date_fmt = "YYYY-MM-DD HH24:MI"
+                        mysql_date_fmt = "%Y-%m-%d %H:%i"
                     elif date_fmt.upper() == "HH24MI":
                         ora_date_fmt = "HH24MI"
                         mysql_date_fmt = "%H%i"
@@ -127,6 +130,56 @@ def date_change_function(query_list):
                     date_insert_list.append("</isEqual>")
                     date_insert_list.append("<isEqual property=\"sDbType\" compareValue=\"mariadb\">")
                     date_insert_list.append(" {} DATE_FORMAT({}, '{}') {}".format(pre_sql, col_word, mysql_date_fmt, post_sql))
+                    date_insert_list.append("</isEqual>")
+                    query_list[idx:idx+1] = date_insert_list
+                    break
+            elif "BT_TO_DATE" in word1.upper():
+                pattern = re.compile(r"BT_TO_DATE\(\s*(.*?)\s*,\s*'(.*?)'\s*\)")
+                date_insert_list = []
+                end_pos = 0
+                search_str = []
+                for idx2, word2 in enumerate(line_list[idx1:]):
+                    search_str.append(word2)
+                    if ")" in word2:
+                        end_pos = idx2 + 1
+                        break
+
+                match = pattern.search(" ".join(search_str))
+                if match:
+                    col_word = match.group(1)
+                    date_fmt = match.group(2)
+                    pre_sql = " ".join(line_list[:idx1])
+                    post_sql = " ".join(line_list[end_pos + 1:])
+
+                    ora_date_fmt = ""
+                    mysql_date_fmt = ""
+                    if date_fmt.upper() == "YYYYMMDD":
+                        ora_date_fmt = "YYYYMMDD"
+                        mysql_date_fmt = "%Y%m%d"
+                    elif date_fmt.upper() == "YYYY-MM-DD":
+                        ora_date_fmt = "YYYY-MM-DD"
+                        mysql_date_fmt = "%Y-%m-%d"
+                    elif date_fmt.upper() == "YYYYMMDDHH24":
+                        ora_date_fmt = "YYYYMMDDHH24"
+                        mysql_date_fmt = "%Y%m%d%H"
+                    elif date_fmt.upper() == "YYYYMMDDHH24MISS":
+                        ora_date_fmt = "YYYYMMDDHH24MISS"
+                        mysql_date_fmt = "%Y%m%d%H%i%s"
+                    elif date_fmt.upper() == "YYYY-MM-DD HH24:MI:SS":
+                        ora_date_fmt = "YYYY-MM-DD HH24:MI:SS"
+                        mysql_date_fmt = "%Y-%m-%d %H:%i:%s"
+                    elif date_fmt.upper() == "YYYY-MM-DD HH24:MI":
+                        ora_date_fmt = "YYYY-MM-DD HH24:MI"
+                        mysql_date_fmt = "%Y-%m-%d %H:%i"
+                    elif date_fmt.upper() == "HH24MI":
+                        ora_date_fmt = "HH24MI"
+                        mysql_date_fmt = "%H%i"
+
+                    date_insert_list.append("<isEqual property=\"sDbType\" compareValue=\"oracle\">")
+                    date_insert_list.append(" {} TO_DATE({}, '{}') {}".format(pre_sql, col_word, ora_date_fmt, post_sql))
+                    date_insert_list.append("</isEqual>")
+                    date_insert_list.append("<isEqual property=\"sDbType\" compareValue=\"mariadb\">")
+                    date_insert_list.append(" {} STR_TO_DATE({}, '{}') {}".format(pre_sql, col_word, mysql_date_fmt, post_sql))
                     date_insert_list.append("</isEqual>")
                     query_list[idx:idx+1] = date_insert_list
                     break
@@ -156,7 +209,7 @@ def change_function(query_list):
                 match = pattern.search(word1)
                 if match:
                     col_word = match.group(1)
-                    line_list[idx1] = "{} CAST({} AS VARCHAR2(100)) {}".format(pre_sql, col_word, post_sql)
+                    line_list[idx1] = "{} CAST({} AS VARCHAR(100)) {}".format(pre_sql, col_word, post_sql)
                     query_list[idx] = line_list[idx1]
                     break
 
@@ -166,6 +219,8 @@ def change_function(query_list):
             query_list[idx] = line.replace("BT_NVL_INT", "COALESCE")
         elif "BT_NVL_DATE" in line.upper():
             query_list[idx] = line.replace("BT_NVL_DATE", "COALESCE")
+        elif "BT_SYSDATE" in line.upper():
+            query_list[idx] = line.replace("BT_SYSDATE()", "CURRENT_TIMESTAMP")
 
     return query_list
 
